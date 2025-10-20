@@ -1,58 +1,83 @@
 import pygame
+import math
 
 pygame.init()
-screen = pygame.display.set_mode((1280,720))
+screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 running = True
-dt = 0
-player_pos = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
-player_acc = 0
-acceleration = 1000
-cube_width = 100
-cube_height = 50
-cube = pygame.Rect(0,0, cube_width, cube_height)
-max_speed = 400
-drag = 200
+
+# --- Physics constants ---
+g = 9.81
+M = 1.0    # cart mass
+m = 0.1    # pole mass
+L = 1.0    # half the pole length (meters)
+force_mag = 50.0
+max_force = 200.0
+
+# --- Simulation scale ---
+PIXELS_PER_METER = 200
+cart_y = 500  # y position of cart on screen
+
+# --- State variables ---
+x = 0.0          # cart position (m)
+x_dot = 0.0      # cart velocity (m/s)
+theta = 0.1      # pole angle (radians)
+theta_dot = 0.0  # pole angular velocity (rad/s)
+
+# --- Drawing constants ---
+cart_width = 100
+cart_height = 50
+pole_length_px = int(L * 2 * PIXELS_PER_METER)  # full pole length in pixels
 
 while running:
-    #check for stop
+    dt = clock.tick(60) / 1000  # seconds per frame
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running=False
-    
+            running = False
 
-    screen.fill("purple")
-    cube.x = player_pos.x
-    cube.y = player_pos.y
-    pygame.draw.rect(screen, "red", cube)
-    pygame.draw.circle(screen, "black", (cube.x, cube.y+cube.height), 10)
-    pygame.draw.circle(screen, "black", (cube.x+cube.width, cube.y+cube.height), 10)
-
-    # move left right
+    # --- Input: cart force ---
     keys = pygame.key.get_pressed()
-
+    F = 0.0
     if keys[pygame.K_a]:
-        player_acc -= acceleration * dt
+        F = -force_mag
     elif keys[pygame.K_d]:
-        player_acc += acceleration * dt
-    else: # Add drag if no acceleration is applied
-        if player_acc > 0:
-            player_acc -= drag * dt
-            if player_acc < 0:
-                player_acc = 0
-        elif player_acc < 0:
-            player_acc += drag * dt
-            if player_acc > 0:
-                player_acc = 0
-        
-    # Clamp speed
-    player_acc = max(-max_speed, min(max_speed, player_acc))
+        F = force_mag
 
-    # Update position
-    player_pos.x += player_acc * dt
-    print(player_acc)
+    # --- Physics (realistic equations) ---
+    sin_theta = math.sin(theta)
+    cos_theta = math.cos(theta)
+
+    # theta acceleration
+    num = g * sin_theta + cos_theta * (
+        -F - m * L * (theta_dot**2) * sin_theta
+    ) / (M + m)
+    den = L * (4.0 / 3.0 - (m * cos_theta**2) / (M + m))
+    theta_ddot = num / den
+
+    # cart acceleration
+    x_ddot = (F + m * L * (theta_dot**2 * sin_theta - theta_ddot * cos_theta)) / (M + m)
+
+    # integrate
+    x_dot += x_ddot * dt
+    x += x_dot * dt
+    theta_dot += theta_ddot * dt
+    theta += theta_dot * dt
+
+    # --- Drawing ---
+    screen.fill((160, 100, 200))
+    cart_x_screen = int(screen.get_width() / 2 + x * PIXELS_PER_METER)
+    cart_rect = pygame.Rect(cart_x_screen - cart_width//2, cart_y, cart_width, cart_height)
+    pygame.draw.rect(screen, (255, 0, 0), cart_rect)
+
+    # Pole pivot point
+    pivot = (cart_x_screen, cart_y)
+    # Pole tip position
+    pole_x = pivot[0] + pole_length_px * math.sin(theta)
+    pole_y = pivot[1] - pole_length_px * math.cos(theta)
+    pygame.draw.line(screen, (0, 0, 0), pivot, (pole_x, pole_y), 6)
+    pygame.draw.circle(screen, (0, 0, 255), (int(pole_x), int(pole_y)), 10)
 
     pygame.display.flip()
-    dt = clock.tick(60) / 1000
 
-pygame.quit()
+pygame.display.quit()
