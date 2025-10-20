@@ -11,7 +11,8 @@ acceleration = 1000
 cube_width = 100
 cube_height = 50
 cube = pygame.Rect(0,0, cube_width, cube_height)
-max_speed = 300
+max_speed = 400
+drag = 200
 
 while running:
     #check for stop
@@ -32,15 +33,24 @@ while running:
 
     if keys[pygame.K_a]:
         player_acc -= acceleration * dt
-    if keys[pygame.K_d]:
+    elif keys[pygame.K_d]:
         player_acc += acceleration * dt
-
+    else: # Add drag if no acceleration is applied
+        if player_acc > 0:
+            player_acc -= drag * dt
+            if player_acc < 0:
+                player_acc = 0
+        elif player_acc < 0:
+            player_acc += drag * dt
+            if player_acc > 0:
+                player_acc = 0
+        
     # Clamp speed
     player_acc = max(-max_speed, min(max_speed, player_acc))
 
     # Update position
     player_pos.x += player_acc * dt
-
+    print(player_acc)
 
     pygame.display.flip()
     dt = clock.tick(60) / 1000
