@@ -51,6 +51,10 @@ while running:
     elif keys[pygame.K_r]:
         x, x_dot, theta, theta_dot = 0, 0, 0.1, 0
 
+    # --- Prevent pushing into walls ---
+    max_x = 3.0
+    if (x <= -max_x and F < 0) or (x >= max_x and F > 0):
+        F = 0
 
     # Physics equations
     sin_theta = math.sin(theta)
@@ -61,20 +65,19 @@ while running:
     theta_ddot = (G * sin_theta - cos_theta * temp) / (
         LENGTH_POLE * (4.0 / 3.0 - (MASS_POLE * cos_theta**2) / total_mass)
     )
+    # x acceleration
     x_ddot = temp - MASS_POLE * LENGTH_POLE * theta_ddot * cos_theta / total_mass
 
     # integrate
-    x_dot += x_ddot * dt
+    x_dot += x_ddot * dt # x_velocity
     x += x_dot * dt
-    theta_dot += theta_ddot * dt
+    theta_dot += theta_ddot * dt # theta velocity
     theta += theta_dot * dt
-    print(f"x_ddot: {x_ddot}")
-    print(f"x_dot {x_dot}")
-    print(f"x {x}")
+    
 
     # --- Damping (friction / air resistance) ---
     x_dot *= 0.99       # cart friction
-    theta_dot *= 0.995  # pole air drag
+    theta_dot *= 0.999  # pole air drag
 
 
     # --- Clamp cart position and stop at edges ---
@@ -82,9 +85,11 @@ while running:
     if x > max_x:
         x = max_x
         x_dot = 0
+        x_ddot = 0
     elif x < -max_x:
         x = -max_x
         x_dot = 0
+        x_ddot = 0
 
     
 
