@@ -38,7 +38,7 @@ class cartpole_env:
         return self.state   
 
 
-    def step(self, action, dt=0.02):
+    def step(self, action, step=0, dt=0.02):
 
         # calculate force from direction
         F = action * self.FORCE_MAG
@@ -74,15 +74,53 @@ class cartpole_env:
         reward = 0
         if 3 < abs(self.x):
             done = True
+            reward += -100
         else:
             reward += 1
         
+        if step >= 500:
+            done = True
 
         reward += np.cos(self.theta) * 2  # reward for keeping pole upright
         
+        return  state, reward, done
         
 
+    def render(self):
+        # Lazy-init Pygame only when rendering
+        if self.screen is None:
+            import pygame
+            pygame.init()
+            self.screen = pygame.display.set_mode((1280, 720))
+            self.clock = pygame.time.Clock()
 
-        return  state, reward, done
+        import pygame
+        screen = self.screen
+        clock = self.clock
+
+        screen.fill("purple")
+
+        # Coordinate conversions
+        PIXELS_PER_METER = 200
+        CART_Y = 500
+        cart_width = 100
+        cart_height = 50
+        pole_length_px = int(1.0 * PIXELS_PER_METER)  # same LENGTH_POLE as physics
+
+        cart_x_screen = int(screen.get_width() / 2 + self.x * PIXELS_PER_METER)
+        cart_rect = pygame.Rect(cart_x_screen - cart_width//2, CART_Y, cart_width, cart_height)
+        pygame.draw.rect(screen, (255, 0, 0), cart_rect)
+
+        pivot = (cart_x_screen, CART_Y)
+        pole_x = pivot[0] + pole_length_px * math.sin(self.theta)
+        pole_y = pivot[1] - pole_length_px * math.cos(self.theta)
+
+        pygame.draw.line(screen, (0, 0, 0), pivot, (pole_x, pole_y), 6)
+        pygame.draw.circle(screen, (0, 0, 255), (int(pole_x), int(pole_y)), 10)
+
+        pygame.display.flip()
+        clock.tick(60)
+
+ 
     
         

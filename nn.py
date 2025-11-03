@@ -1,5 +1,7 @@
 import torch
 from torch import nn
+import torch.nn.functional as F
+
 
 class NeuralNetwork(nn.Module):
     def __init__(self):
@@ -10,10 +12,9 @@ class NeuralNetwork(nn.Module):
             nn.ReLU(),
             nn.Linear(64, 64),
             nn.ReLU(),
-            nn.Linear(64, 1),
-            nn.Hardtanh()
+            nn.Linear(64, 2),
         )
 
     def forward(self, x):
-        return self.linear_relu_stack(x)
+        return F.softmax(self.linear_relu_stack(x), dim=-1)
     
