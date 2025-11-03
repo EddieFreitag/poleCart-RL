@@ -1,5 +1,7 @@
 import pygame
 import math
+import random
+import numpy
 
 pygame.init()
 screen = pygame.display.set_mode((1280,720))
@@ -22,7 +24,7 @@ CART_Y = 500
 
 x = 0.0 # cart postition
 x_dot = 0.0 # initial velocity(m/s)
-theta = 0.5 # pole angle in radians
+theta = random.uniform(-1,1) # pole angle in radians
 theta_dot = 0 # angular velocity(radians/sec)
 
 # Drawing sontants
@@ -109,9 +111,6 @@ while running:
     pole_y = pivot[1] - pole_length_px * math.cos(theta)
     pygame.draw.line(screen, (0, 0, 0), pivot, (pole_x, pole_y), 6)
     pygame.draw.circle(screen, (0, 0, 255), (int(pole_x), int(pole_y)), 10)
-
-        
-
 
     pygame.display.flip()
 
