@@ -26,6 +26,10 @@ class cartpole_env:
         self.reward = 1
         self.penalty = -1
 
+        # Pygame variables
+        self.screen = None
+        self.clock = None
+
     def reset(self):
     # Random small initial values so it doesn’t start perfectly balanced
         self.x = np.random.uniform(-0.05, 0.05)
@@ -41,7 +45,10 @@ class cartpole_env:
     def step(self, action, step=0, dt=0.02):
 
         # calculate force from direction
-        F = action * self.FORCE_MAG
+        if action == 0:
+            F = -self.FORCE_MAG
+        else:
+            F = self.FORCE_MAG
 
         # Physics equations
         sin_theta = math.sin(self.theta)
@@ -74,14 +81,17 @@ class cartpole_env:
         reward = 0
         if 3 < abs(self.x):
             done = True
-            reward += -100
+            reward += -2000
         else:
             reward += 1
         
         if step >= 500:
             done = True
 
-        reward += np.cos(self.theta) * 2  # reward for keeping pole upright
+        if np.cos(self.theta) > 0.5:
+            reward += np.cos(self.theta) * 30  # reward for keeping pole upright
+        else:
+            reward += -5   # smaller reward when pole is falling
         
         return  state, reward, done
         
@@ -97,6 +107,11 @@ class cartpole_env:
         import pygame
         screen = self.screen
         clock = self.clock
+
+        for event in pygame.event.get():   # <-- THIS prevents freezing
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
 
         screen.fill("purple")
 
