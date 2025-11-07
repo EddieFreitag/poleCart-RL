@@ -38,7 +38,7 @@ This project uses **Conda** to manage dependencies.
 
 ### 1. Create the Environment Automatically
 
-''' ./setup.sh '''
+`./setup.sh`
 
 This will:
 
@@ -48,16 +48,16 @@ This will:
 
 ### 2. Activate the Environment Later
 
-''' conda activate cartpole '''
+`conda activate cartpole`
 
 ### 3. Run Training
 
-python train.py
+`python train.py`
 
 
 ### 4. Run the Trained Agent
 
-python agent_play.py
+`python agent_play.py`
 
 
 If the model file `cartpole_policy.pth` exists, the agent will attempt to balance the pole.  
