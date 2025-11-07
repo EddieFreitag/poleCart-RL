@@ -35,6 +35,7 @@ This allows you to assist or test the policy in real time.
 ## Setup Instructions
 
 This project uses **Conda** to manage dependencies.
+Make sure Conda (or Miniconda / Anaconda) is installed before running the setup script.
 
 ### 1. Create the Environment Automatically
 
