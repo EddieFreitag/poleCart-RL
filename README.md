@@ -32,13 +32,49 @@ This allows you to assist or test the policy in real time.
 
 ---
 
+## Setup Instructions
+
+This project uses **Conda** to manage dependencies.
+
+### 1. Create the Environment Automatically
+
+''' ./setup.sh '''
+
+This will:
+
+- Create a conda environment named `cartpole`
+- Install PyTorch, NumPy, Pygame, Matplotlib
+- Activate the environment automatically
+
+### 2. Activate the Environment Later
+
+''' conda activate cartpole '''
+
+### 3. Run Training
+
+python train.py
+
+
+### 4. Run the Trained Agent
+
+python agent_play.py
+
+
+If the model file `cartpole_policy.pth` exists, the agent will attempt to balance the pole.  
+Space toggles **manual override**, and arrow keys let you nudge the cart.
+
+---
+
 ## Project Structure
 
-│── cartpole_env.py # Environment & physics simulation
-│── nn.py # Policy + value neural network
-│── train.py # Training script (Actor-Critic)
-│── agent_play.py # Visual play mode with optional human control
-│── cartpole_policy.pth # Saved model (after training)
+- |── game.py # Game using only user commands
+- │── cartpole_env.py # Environment & physics simulation
+- │── nn.py # Policy + value neural network
+- │── train.py # Training script (Actor-Critic)
+- │── agent_play.py # Visual play mode with optional human control
+- │── cartpole_policy.pth # Saved model (after training)
+- |── setup.sh # Sets up the conda environment
+- |── environment.yml # Conda environment
 
 
 ## How the Learning Works

@@ -1,0 +1,13 @@
+name: cartpole
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pytorch
+  - cpuonly        
+  - numpy
+  - matplotlib
+  - pip
+  - pip:
+      - pygame
