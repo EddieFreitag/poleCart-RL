@@ -24,7 +24,7 @@ CART_Y = 500
 
 x = 0.0 # cart postition
 x_dot = 0.0 # initial velocity(m/s)
-theta = random.uniform(-1,1) # pole angle in radians
+theta = random.uniform(-0.5,0.5) # pole angle in radians
 theta_dot = 0 # angular velocity(radians/sec)
 
 # Drawing sontants

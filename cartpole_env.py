@@ -25,6 +25,8 @@ class cartpole_env:
         # reward
         self.reward = 1
         self.penalty = -1
+        self.fallen = 0
+        self.upright_steps = 0
 
         # Pygame variables
         self.screen = None
@@ -34,10 +36,12 @@ class cartpole_env:
     # Random small initial values so it doesn’t start perfectly balanced
         self.x = np.random.uniform(-0.05, 0.05)
         self.x_dot = np.random.uniform(-0.05, 0.05)
-        self.theta = np.random.uniform(-1, 1)
+        self.theta = np.random.uniform(-0.2, 0.2)
         self.theta_dot = np.random.uniform(-0.05, 0.05)
         self.time = 0
         self.done = False
+        self.fallen = 0
+        self.upright_steps = 0
         self.state = np.array([self.x, self.x_dot, self.theta, self.theta_dot], dtype=np.float32)
         return self.state   
 
@@ -47,8 +51,10 @@ class cartpole_env:
         # calculate force from direction
         if action == 0:
             F = -self.FORCE_MAG
-        else:
+        elif action == 2:
             F = self.FORCE_MAG
+        else:
+            F = 0
 
         # Physics equations
         sin_theta = math.sin(self.theta)
@@ -77,24 +83,37 @@ class cartpole_env:
         state = np.array([self.x, self.x_dot, self.theta, self.theta_dot], dtype=np.float32)
         
         # compute reward and done
-        done = False
-        reward = 0
-        if 3 < abs(self.x):
-            done = True
-            reward += -2000
-        else:
-            reward += 1
-        
-        if step >= 500:
-            done = True
-
-        if np.cos(self.theta) > 0.5:
-            reward += np.cos(self.theta) * 30  # reward for keeping pole upright
-        else:
-            reward += -5   # smaller reward when pole is falling
+        reward, done = self.compute_reward(step)
         
         return  state, reward, done
         
+    def compute_reward(self, step):
+        done = False
+        reward = 0
+        
+        # If the cart leaves the allowed area, end episode
+        if abs(self.x) > 3.5 or abs(self.theta) > 0.6:
+            return -50, True
+
+        # Gradual reward shaping
+        reward = 0
+
+        # Reward upright pole (cos(theta) is +1 when vertical)
+        reward += np.cos(self.theta)   # +1 good, 0 neutral, -1 bad
+
+        # Reward staying near center (small penalty)
+        reward -= 0.01 * abs(self.x)
+
+        # Soft penalty for downward pole, but do NOT end episode
+        if np.cos(self.theta) < 0:
+            reward -= 0.1        
+
+        # Episode success if survived long
+        if step >= 500:
+            done = True
+            reward += 40   # small success reward
+        
+        return reward, done
 
     def render(self):
         # Lazy-init Pygame only when rendering
