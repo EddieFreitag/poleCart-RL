@@ -1,6 +1,6 @@
-# Cart-Pole Reinforcement Learning (From Scratch)
+# Cart-Pole Reinforcement Learning (This is a work in progress)
 
-This project implements **the classic cart-pole balancing problem** without using Gym or pre-built physics.  
+This project implements **the classic cart-pole balancing problem** without using Gym or pre-built physics for learning purposes.  
 Both the **environment** and **reinforcement learning agent** were created **from scratch** to learn the underlying concepts.
 
 The goal:  
@@ -26,7 +26,6 @@ A cart moves left/right to balance a pendulum upright. The agent must learn a po
 | **A** / **←** | Push cart left |
 | **D** / **→** | Push cart right |
 | *(no key pressed)* | Agent controls the cart |
-| **SPACE** | Toggle *manual override* on/off |
 
 This allows you to assist or test the policy in real time.
 
