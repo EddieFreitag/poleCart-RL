@@ -3,8 +3,11 @@
 This project implements **the classic cart-pole balancing problem** without using Gym or pre-built physics for learning purposes.  
 Both the **environment** and **reinforcement learning agent** were created **from scratch** to learn the underlying concepts.
 
+Current state:
+The learning is done with the pole starting upright, and penalizes falling down. Thus the agent is currently unable to continue once the pole falls and the game end. In Future the agent should be able to pick up the pole also from a fallen state.
+
 The goal:  
-A cart moves left/right to balance a pendulum upright. The agent must learn a policy that prevents the pole from falling.
+A cart moves left/right to balance a pendulum upright. The agent must learn a policy that picks up the pole and prevents the pole from falling.
 
 ---
 
@@ -38,7 +41,11 @@ Make sure Conda (or Miniconda / Anaconda) is installed before running the setup 
 
 ### 1. Create the Environment Automatically
 
+Linux/MacOS
 `./setup.sh`
+Windows(Powershell)
+Open PowerShell in the project folder and run:
+`.\setup.ps1`
 
 This will:
 
