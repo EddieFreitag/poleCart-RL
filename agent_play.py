@@ -11,8 +11,8 @@ env = cartpole_env()
 
 state = env.reset()
 done = False
-manual_override = False
-
+space_pressed = False
+manual_play = False
 while not done:
     env.render()
     
@@ -25,12 +25,18 @@ while not done:
         manual_action = 0   # push left
     elif keys[pygame.K_d] or keys[pygame.K_RIGHT]:
         manual_action = 2   # push right
-    elif keys[pygame.K_SPACE]:
-        manual_override = not manual_override
-        print("Manual Override:", manual_override)
+
+    if keys[pygame.K_SPACE]:
+        if space_pressed == False:
+            space_pressed = True
+            manual_play = not manual_play
+    else:
+        space_pressed = False
+    
 
     # --- Choose action ---
-    if manual_override or manual_action is not None:
+    if manual_play:
+        print("Manual Override:", manual_play)
         action = manual_action  # human input
     else:
         state_tensor = torch.tensor(state, dtype=torch.float32)
