@@ -1,5 +1,7 @@
 import numpy as np
 import math
+import pygame
+
 
 class cartpole_env:
     def __init__(self):
@@ -32,17 +34,17 @@ class cartpole_env:
         self.screen = None
         self.clock = None
 
-    def reset(self):
+    def reset(self, r=1):
     # Random small initial values so it doesn’t start perfectly balanced
-        self.x = np.random.uniform(-0.05, 0.05)
-        self.x_dot = np.random.uniform(-0.05, 0.05)
-        self.theta = np.random.uniform(-0.2, 0.2)
-        self.theta_dot = np.random.uniform(-0.05, 0.05)
+        self.x = np.random.uniform(-((0.1*r)%3), (0.1*r)%3)
+        self.x_dot = np.random.uniform(-0.4, 0.4)
+        self.theta = np.random.uniform(-0.1*r, 0.1*r)
+        self.theta_dot = np.random.uniform(-0.4, 0.4)
         self.time = 0
         self.done = False
         self.fallen = 0
         self.upright_steps = 0
-        self.state = np.array([self.x, self.x_dot, self.theta, self.theta_dot], dtype=np.float32)
+        self.state = np.array([self.x, self.x_dot, np.sin(self.theta), np.cos(self.theta), self.theta_dot], dtype=np.float32)
         return self.state   
 
 
@@ -79,8 +81,11 @@ class cartpole_env:
         self.x_dot *= 0.99       # cart friction
         self.theta_dot *= 0.999  # pole air drag
 
+        sin_theta = math.sin(self.theta)
+        cos_theta = math.cos(self.theta)
+
         # update state
-        state = np.array([self.x, self.x_dot, self.theta, self.theta_dot], dtype=np.float32)
+        state = np.array([self.x, self.x_dot, sin_theta, cos_theta, self.theta_dot], dtype=np.float32)
         
         # compute reward and done
         reward, done = self.compute_reward(step)
@@ -90,40 +95,40 @@ class cartpole_env:
     def compute_reward(self, step):
         done = False
         reward = 0
+
+        if abs(self.x) > 4:
+            done = True
+            reward -= 50   # penalty for going out of bounds
         
-        # If the cart leaves the allowed area, end episode
-        if abs(self.x) > 3.5 or abs(self.theta) > 0.6:
-            return -50, True
-
-        # Gradual reward shaping
-        reward = 0
-
         # Reward upright pole (cos(theta) is +1 when vertical)
         reward += np.cos(self.theta)   # +1 good, 0 neutral, -1 bad
-
+              
         # Reward staying near center (small penalty)
         reward -= 0.01 * abs(self.x)
 
         # Soft penalty for downward pole, but do NOT end episode
         if np.cos(self.theta) < 0:
-            reward -= 0.1        
-
+            reward -= 0.1
+        elif np.cos(self.theta) > 0.8:
+            reward += 0.2
+        
+        # Soft penalty for high velocities
+        reward -= 0.01 * abs(self.theta_dot)
+        
         # Episode success if survived long
-        if step >= 500:
+        if step >= 1000:
             done = True
             reward += 40   # small success reward
         
         return reward, done
 
-    def render(self):
+    def render(self, manual_play=False):
         # Lazy-init Pygame only when rendering
         if self.screen is None:
-            import pygame
             pygame.init()
             self.screen = pygame.display.set_mode((1280, 720))
             self.clock = pygame.time.Clock()
 
-        import pygame
         screen = self.screen
         clock = self.clock
 
@@ -144,6 +149,19 @@ class cartpole_env:
         cart_x_screen = int(screen.get_width() / 2 + self.x * PIXELS_PER_METER)
         cart_rect = pygame.Rect(cart_x_screen - cart_width//2, CART_Y, cart_width, cart_height)
         pygame.draw.rect(screen, (255, 0, 0), cart_rect)
+
+        # Draw indicator for manual control
+        font = pygame.font.SysFont(None, 36)
+
+        if manual_play:
+            font = pygame.font.SysFont(None, 36)
+            text = font.render("Manual", True, (255, 255, 255))
+            screen.blit(text, (20, 20))
+            pygame.draw.rect(screen, (0, 255, 0), (20, 20, 70, 70))
+        else:
+            text = font.render("Agent", True, (255, 255, 255))
+            screen.blit(text, (20, 20))
+            pygame.draw.rect(screen, (255, 0, 0), (20, 20, 70, 70))
 
         pivot = (cart_x_screen, CART_Y)
         pole_x = pivot[0] + pole_length_px * math.sin(self.theta)

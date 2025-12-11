@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import signal
 import sys
+from tqdm import tqdm
 
 # Hyperparameters
 learning_rate = 0.001
@@ -78,15 +79,17 @@ signal.signal(signal.SIGINT, handle_interrupt)
 
 def main():
     rewards = []
-    for episode in range(episodes):
-        state = env.reset()
+    r = 1 # randomization factor for starting state
+
+    for episode in tqdm(range(episodes), desc="Training Episodes"):
+        state = env.reset(r=r)
         done = False
         total_reward = 0
         step = 0
 
         while not done:
             action = select_action(state)
-            next_state, reward, done = env.step(action)   # <-- FIXED
+            next_state, reward, done = env.step(action, step=step)   # <-- FIXED
             step += 1
 
             episode_rewards.append(reward)                # <-- KEEP
@@ -95,9 +98,17 @@ def main():
 
         rewards.append(total_reward)
         finish_episode()                                  # <-- uses stored log_probs + values
-
-        if episode % 50 == 0 and episode != 0:
-            print(f"Episode {episode} | Mean Reward: {np.mean(rewards[-50:])}")
+        mod = 20
+        max_diff = 35
+        if episode % mod == 0 and episode != 0:
+            mean_reward = np.mean(rewards[-mod:])
+            tqdm.write(f"Episode {episode} | Mean Reward: {mean_reward}")
+            if mean_reward >= 250 and r < max_diff:
+                r += 1  # increase randomization factor
+                tqdm.write(f"Increasing difficulty to lvl: {r}/{max_diff} !")
+            elif r == max_diff:
+                tqdm.write("Max difficulty reached.")
+                
 
         
     torch.save(policy.state_dict(), 'cartpole_policy.pth')

@@ -7,7 +7,7 @@ class NeuralNetwork(nn.Module):
     def __init__(self):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(4, 64),
+            nn.Linear(5, 64),
             nn.Tanh(),
             nn.Linear(64, 64),
             nn.Tanh(),

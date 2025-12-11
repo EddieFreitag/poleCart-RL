@@ -14,17 +14,19 @@ done = False
 space_pressed = False
 manual_play = False
 while not done:
-    env.render()
+    env.render(manual_play)
     
         # --- Handle keyboard input ---
     keys = pygame.key.get_pressed()
 
-    manual_action = None
+    manual_action = 1
 
     if keys[pygame.K_a] or keys[pygame.K_LEFT]:
         manual_action = 0   # push left
     elif keys[pygame.K_d] or keys[pygame.K_RIGHT]:
         manual_action = 2   # push right
+    elif keys[pygame.K_r]:
+        env.reset()  # no force
 
     if keys[pygame.K_SPACE]:
         if space_pressed == False:
