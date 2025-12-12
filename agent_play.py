@@ -4,7 +4,11 @@ from nn import NeuralNetwork
 import pygame
 
 nn = NeuralNetwork()
-nn.load_state_dict(torch.load('cartpole_policy.pth'))
+try:
+    nn.load_state_dict(torch.load('cartpole_policy.pth'))
+    print("Loaded trained model.")
+except FileNotFoundError:
+    print("No trained model found, using untrained network.")
 nn.eval() # run network in inference mode
 
 env = cartpole_env()
@@ -13,7 +17,7 @@ state = env.reset()
 done = False
 space_pressed = False
 manual_play = False
-while not done:
+while True:
     env.render(manual_play)
     
         # --- Handle keyboard input ---
@@ -51,4 +55,8 @@ while not done:
     print(f"Action: {action}")
     print(f"State: {state}")
     print(f"Reward: {reward}")
+
+    if done:
+        env.reset()
+        
 

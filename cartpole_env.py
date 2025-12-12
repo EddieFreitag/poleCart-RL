@@ -37,9 +37,9 @@ class cartpole_env:
     def reset(self, r=1):
     # Random small initial values so it doesn’t start perfectly balanced
         self.x = np.random.uniform(-((0.1*r)%3), (0.1*r)%3)
-        self.x_dot = np.random.uniform(-0.4, 0.4)
+        self.x_dot = np.random.uniform(-0.1, 0.1)
         self.theta = np.random.uniform(-0.1*r, 0.1*r)
-        self.theta_dot = np.random.uniform(-0.4, 0.4)
+        self.theta_dot = np.random.uniform(-0.1, 0.1)
         self.time = 0
         self.done = False
         self.fallen = 0
@@ -95,30 +95,32 @@ class cartpole_env:
     def compute_reward(self, step):
         done = False
         reward = 0
-
+        cos_t = np.cos(self.theta)
         if abs(self.x) > 4:
             done = True
-            reward -= 50   # penalty for going out of bounds
+            reward = -50   # penalty for going out of bounds
         
         # Reward upright pole (cos(theta) is +1 when vertical)
-        reward += np.cos(self.theta)   # +1 good, 0 neutral, -1 bad
+        reward += cos_t   # +1 good, 0 neutral, -1 bad
               
         # Reward staying near center (small penalty)
-        reward -= 0.01 * abs(self.x)
+        reward -= 0.02 * abs(self.x)
 
         # Soft penalty for downward pole, but do NOT end episode
+        '''
         if np.cos(self.theta) < 0:
             reward -= 0.1
-        elif np.cos(self.theta) > 0.8:
+        elif np.cos(self.theta) > 0.7:
             reward += 0.2
+        '''
         
         # Soft penalty for high velocities
         reward -= 0.01 * abs(self.theta_dot)
         
         # Episode success if survived long
-        if step >= 1000:
+        if step >= 500:
             done = True
-            reward += 40   # small success reward
+            #reward += 20   # small success reward
         
         return reward, done
 
@@ -126,7 +128,7 @@ class cartpole_env:
         # Lazy-init Pygame only when rendering
         if self.screen is None:
             pygame.init()
-            self.screen = pygame.display.set_mode((1280, 720))
+            self.screen = pygame.display.set_mode((1440, 720))
             self.clock = pygame.time.Clock()
 
         screen = self.screen
@@ -157,11 +159,11 @@ class cartpole_env:
             font = pygame.font.SysFont(None, 36)
             text = font.render("Manual", True, (255, 255, 255))
             screen.blit(text, (20, 20))
-            pygame.draw.rect(screen, (0, 255, 0), (20, 20, 70, 70))
+            pygame.draw.rect(screen, (0, 255, 0), (70, 20, 20, 20))
         else:
             text = font.render("Agent", True, (255, 255, 255))
             screen.blit(text, (20, 20))
-            pygame.draw.rect(screen, (255, 0, 0), (20, 20, 70, 70))
+            pygame.draw.rect(screen, (255, 0, 0), (70, 20, 20, 20))
 
         pivot = (cart_x_screen, CART_Y)
         pole_x = pivot[0] + pole_length_px * math.sin(self.theta)
