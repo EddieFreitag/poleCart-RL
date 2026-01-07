@@ -85,7 +85,7 @@ signal.signal(signal.SIGINT, handle_interrupt)
 
 def main():
     rewards = []
-    r = 12 # randomization factor for starting state
+    r = 13 # randomization factor for starting state
     print(f"Starting training with randomization factor: {r}")
     for episode in tqdm(range(episodes), desc="Training Episodes"):
         state = env.reset(r=r)

@@ -159,11 +159,11 @@ class cartpole_env:
             font = pygame.font.SysFont(None, 36)
             text = font.render("Manual", True, (255, 255, 255))
             screen.blit(text, (20, 20))
-            pygame.draw.rect(screen, (0, 255, 0), (70, 20, 20, 20))
+            pygame.draw.rect(screen, (0, 255, 0), (120, 20, 20, 20))
         else:
             text = font.render("Agent", True, (255, 255, 255))
             screen.blit(text, (20, 20))
-            pygame.draw.rect(screen, (255, 0, 0), (70, 20, 20, 20))
+            pygame.draw.rect(screen, (255, 0, 0), (120, 20, 20, 20))
 
         pivot = (cart_x_screen, CART_Y)
         pole_x = pivot[0] + pole_length_px * math.sin(self.theta)
