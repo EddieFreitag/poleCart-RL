@@ -1,7 +1,7 @@
 import numpy as np
 import math
 import pygame
-
+import os
 
 class cartpole_env:
     def __init__(self):
@@ -33,6 +33,9 @@ class cartpole_env:
         # Pygame variables
         self.screen = None
         self.clock = None
+        self.bg = None
+        self.font = None
+        self.bg_width = 0
 
     def reset(self, r=1):
     # Random small initial values so it doesn’t start perfectly balanced
@@ -78,8 +81,9 @@ class cartpole_env:
         
 
         # --- Damping (friction / air resistance) ---
-        self.x_dot *= 0.99       # cart friction
-        self.theta_dot *= 0.999  # pole air drag
+        damping_factor = 0.4
+        self.x_dot *= (1 - damping_factor * dt)     # cart friction
+        self.theta_dot *= (1 - damping_factor * dt)  # pole air drag
 
         sin_theta = math.sin(self.theta)
         cos_theta = math.cos(self.theta)
@@ -96,31 +100,17 @@ class cartpole_env:
         done = False
         reward = 0
         cos_t = np.cos(self.theta)
-        if abs(self.x) > 4:
-            done = True
-            reward = -50   # penalty for going out of bounds
-        
+    
         # Reward upright pole (cos(theta) is +1 when vertical)
         reward += cos_t   # +1 good, 0 neutral, -1 bad
-              
-        # Reward staying near center (small penalty)
-        reward -= 0.02 * abs(self.x)
-
-        # Soft penalty for downward pole, but do NOT end episode
-        '''
-        if np.cos(self.theta) < 0:
-            reward -= 0.1
-        elif np.cos(self.theta) > 0.7:
-            reward += 0.2
-        '''
         
         # Soft penalty for high velocities
         reward -= 0.01 * abs(self.theta_dot)
-        
+        reward -= 0.01 * abs(self.x_dot)
+        reward -= 0.001 * abs(self.x)  # small penalty for being far from center
         # Episode success if survived long
         if step >= 500:
             done = True
-            #reward += 20   # small success reward
         
         return reward, done
 
@@ -130,6 +120,12 @@ class cartpole_env:
             pygame.init()
             self.screen = pygame.display.set_mode((1440, 720))
             self.clock = pygame.time.Clock()
+             # Load and scale background once
+            self.bg = pygame.image.load(os.path.join('images', 'bg.png')).convert()
+            self.bg = pygame.transform.scale(self.bg, (1440, 720))
+            self.bg_width = self.bg.get_width()
+            self.font = pygame.font.SysFont(None, 36)
+
 
         screen = self.screen
         clock = self.clock
@@ -139,8 +135,10 @@ class cartpole_env:
                     pygame.quit()
                     exit()
 
-        screen.fill("purple")
-
+        #screen.fill("purple")
+        
+        
+        
         # Coordinate conversions
         PIXELS_PER_METER = 200
         CART_Y = 500
@@ -148,22 +146,26 @@ class cartpole_env:
         cart_height = 50
         pole_length_px = int(1.0 * PIXELS_PER_METER)  # same LENGTH_POLE as physics
 
-        cart_x_screen = int(screen.get_width() / 2 + self.x * PIXELS_PER_METER)
+        # Track background scrolling
+        bgX = 0 - (self.x * PIXELS_PER_METER) % self.bg.get_width()
+        screen.blit(self.bg, (bgX, 0))
+        screen.blit(self.bg, (bgX + self.bg_width, 0))
+
+        # cart_x_screen = int(screen.get_width() / 2 + self.x * PIXELS_PER_METER)
+        cart_x_screen = int(screen.get_width() // 2)
         cart_rect = pygame.Rect(cart_x_screen - cart_width//2, CART_Y, cart_width, cart_height)
         pygame.draw.rect(screen, (255, 0, 0), cart_rect)
 
-        # Draw indicator for manual control
-        font = pygame.font.SysFont(None, 36)
+        
 
-        if manual_play:
-            font = pygame.font.SysFont(None, 36)
-            text = font.render("Manual", True, (255, 255, 255))
-            screen.blit(text, (20, 20))
-            pygame.draw.rect(screen, (0, 255, 0), (120, 20, 20, 20))
-        else:
-            text = font.render("Agent", True, (255, 255, 255))
-            screen.blit(text, (20, 20))
-            pygame.draw.rect(screen, (255, 0, 0), (120, 20, 20, 20))
+
+        # --- Draw manual/agent indicator ---
+        label = "Manual" if manual_play else "Agent"
+        text = self.font.render(label, True, (255, 255, 255))
+        screen.blit(text, (20, 20))
+
+        color = (0, 255, 0) if manual_play else (255, 0, 0)
+        pygame.draw.rect(screen, color, (120, 20, 20, 20))
 
         pivot = (cart_x_screen, CART_Y)
         pole_x = pivot[0] + pole_length_px * math.sin(self.theta)

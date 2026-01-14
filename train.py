@@ -85,7 +85,7 @@ signal.signal(signal.SIGINT, handle_interrupt)
 
 def main():
     rewards = []
-    r = 13 # randomization factor for starting state
+    r = 1 # randomization factor for starting state
     print(f"Starting training with randomization factor: {r}")
     for episode in tqdm(range(episodes), desc="Training Episodes"):
         state = env.reset(r=r)
@@ -108,7 +108,7 @@ def main():
         max_diff = 32
         if episode % mod == 0 and episode != 0:
             mean_reward = np.mean(rewards[-mod:])
-            tqdm.write(f"Episode {episode} | Mean Reward: {mean_reward}")
+            tqdm.write(f"Episode {episode} | Mean Reward: {mean_reward:.2f}")
             if mean_reward >= 350 and r < max_diff:
                 r += 1  # increase randomization factor
                 tqdm.write(f"Increasing difficulty to lvl: {r}/{max_diff} !")
