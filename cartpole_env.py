@@ -47,7 +47,7 @@ class cartpole_env:
         self.done = False
         self.fallen = 0
         self.upright_steps = 0
-        self.state = np.array([self.x, self.x_dot, np.sin(self.theta), np.cos(self.theta), self.theta_dot], dtype=np.float32)
+        self.state = np.array([self.x_dot, np.sin(self.theta), np.cos(self.theta), self.theta_dot], dtype=np.float32)
         return self.state   
 
 
@@ -89,7 +89,7 @@ class cartpole_env:
         cos_theta = math.cos(self.theta)
 
         # update state
-        state = np.array([self.x, self.x_dot, sin_theta, cos_theta, self.theta_dot], dtype=np.float32)
+        state = np.array([self.x_dot, sin_theta, cos_theta, self.theta_dot], dtype=np.float32)
         
         # compute reward and done
         reward, done = self.compute_reward(step)
@@ -107,7 +107,6 @@ class cartpole_env:
         # Soft penalty for high velocities
         reward -= 0.01 * abs(self.theta_dot)
         reward -= 0.01 * abs(self.x_dot)
-        reward -= 0.001 * abs(self.x)  # small penalty for being far from center
         # Episode success if survived long
         if step >= 500:
             done = True
