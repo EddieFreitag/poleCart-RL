@@ -8,10 +8,17 @@ import signal
 import sys
 from tqdm import tqdm
 
+
+episode_rewards = []
+episode_log_probs = []
+episode_values = []   
+difficulty_updates = []
+rewards = []
+
 # Hyperparameters
 learning_rate = 0.001
 gamma = 0.99
-episodes = 5000
+episodes = 4000
 
 # Initialize
 env = cartpole_env()
@@ -23,11 +30,6 @@ except FileNotFoundError:
     print("No trained model found, starting fresh.")
 policy.train()  # set network to training mode
 optimizer = torch.optim.Adam(policy.parameters(), lr=learning_rate)
-
-episode_rewards = []
-episode_log_probs = []
-episode_values = []   
-
 
 def select_action(state):
     state = torch.tensor(state, dtype=torch.float32)
@@ -71,7 +73,38 @@ def finish_episode():
     episode_rewards.clear()
     episode_values.clear()
 
-    # ---- SAFE SAVE ON INTERRUPT ----
+def plot_learning_curve(rewards, difficulty_updates):
+    median = np.median(rewards)
+    mean = np.mean(rewards)
+    std = np.std(rewards)
+    max = np.max(rewards)
+    print(f"Max Reward: {max:.2f}, Mean Reward: {mean:.2f}, Std Dev: {std:.2f}, Median Reward: {median:.2f}")
+
+    # compute rolling average for plotting
+    window_size = 50
+    rolling_averages = np.convolve(rewards, np.ones(window_size)/window_size, mode='valid')
+    
+    # plot rewards
+    plt.scatter(range(len(rewards)), rewards, alpha=0.1, label='Episode Reward')
+    plt.axhline(y=mean, color='orange', linestyle='--', label='Mean Reward')
+    plt.axhline(y=median, color='g', linestyle='--', label='Median Reward')
+    plt.plot(range(window_size - 1, len(rewards)), rolling_averages, color='r', label='Rolling Average (50 eps)')
+    for i, ep in enumerate(difficulty_updates):
+        plt.axvline(
+            x=ep,
+            color='blue',
+            linestyle=':',
+            alpha=0.7,
+            linewidth=1.5,
+            label='Difficulty Increase' if i == 0 else None
+        )
+    plt.legend()
+    plt.xlabel('Episode')
+    plt.ylabel('Total Reward')
+    plt.title('Total Reward per Episode')
+    plt.show()
+
+# ---- SAFE SAVE ON INTERRUPT ----
 def save_model():
     torch.save(policy.state_dict(), "cartpole_policy.pth")
     print("\nModel saved to cartpole_policy.pth")
@@ -79,13 +112,14 @@ def save_model():
 def handle_interrupt(sig, frame):
     print("\nTraining interrupted by user.")
     save_model()
+    plot_learning_curve(rewards, difficulty_updates)
     sys.exit(0)
 
 signal.signal(signal.SIGINT, handle_interrupt)
 
 def main():
-    rewards = []
-    r = 1 # randomization factor for starting state
+    r = 1  # reset randomization factor
+    max_diff = 32  # maximum difficulty level
     print(f"Starting training with randomization factor: {r}")
     for episode in tqdm(range(episodes), desc="Training Episodes"):
         state = env.reset(r=r)
@@ -105,13 +139,13 @@ def main():
         rewards.append(total_reward)
         finish_episode()                                  # <-- uses stored log_probs + values
         mod = 20
-        max_diff = 32
         if episode % mod == 0 and episode != 0:
             mean_reward = np.mean(rewards[-mod:])
             tqdm.write(f"Episode {episode} | Mean Reward: {mean_reward:.2f}")
             if mean_reward >= 350 and r < max_diff:
                 r += 1  # increase randomization factor
                 tqdm.write(f"Increasing difficulty to lvl: {r}/{max_diff} !")
+                difficulty_updates.append(episode)
             elif r == max_diff:
                 tqdm.write("Max difficulty reached.")
                 
@@ -120,26 +154,7 @@ def main():
     torch.save(policy.state_dict(), 'cartpole_policy.pth')
     print("Training complete. Model saved as cartpole_policy.pth")
     print(f"Latest difficulty lvl: {r}/{max_diff}")
-    median = np.median(rewards)
-    mean = np.mean(rewards)
-    std = np.std(rewards)
-    max = np.max(rewards)
-    print(f"Max Reward: {max}, Mean Reward: {mean}, Std Dev: {std}, Median Reward: {median}")
-
-    # compute rolling average for plotting
-    window_size = 50
-    rolling_averages = np.convolve(rewards, np.ones(window_size)/window_size, mode='valid')
-    
-    # plot rewards
-    plt.plot(rewards)
-    plt.axhline(y=mean, color='r', linestyle='--', label='Mean Reward')
-    plt.axhline(y=median, color='g', linestyle='--', label='Median Reward')
-    plt.plot(range(window_size - 1, len(rewards)), rolling_averages, color='orange', label='Rolling Average (50 eps)')
-    plt.legend()
-    plt.xlabel('Episode')
-    plt.ylabel('Total Reward')
-    plt.title('Total Reward per Episode')
-    plt.show()
+    plot_learning_curve(rewards, difficulty_updates)
 
 if __name__ == "__main__":
     main()
