@@ -18,7 +18,7 @@ rewards = []
 # Hyperparameters
 learning_rate = 0.001
 gamma = 0.99
-episodes = 4000
+episodes = 3000
 
 # Initialize
 env = cartpole_env()
@@ -118,7 +118,7 @@ def handle_interrupt(sig, frame):
 signal.signal(signal.SIGINT, handle_interrupt)
 
 def main():
-    r = 1  # reset randomization factor
+    r = 32  # reset randomization factor
     max_diff = 32  # maximum difficulty level
     print(f"Starting training with randomization factor: {r}")
     for episode in tqdm(range(episodes), desc="Training Episodes"):

@@ -11,7 +11,6 @@ class cartpole_env:
         self.MASS_POLE = 0.05
         self.LENGTH_POLE = 1.0 # half the pole length
         self.FORCE_MAG = 20
-        self.MAX_FORCE = 300
 
         # state variables
         self.x = 0.0 # cart postition
@@ -22,13 +21,10 @@ class cartpole_env:
         # state
         self.state = None
         self.done = False
-        self.time = 0
 
         # reward
         self.reward = 1
         self.penalty = -1
-        self.fallen = 0
-        self.upright_steps = 0
 
         # Pygame variables
         self.screen = None
@@ -43,10 +39,7 @@ class cartpole_env:
         self.x_dot = np.random.uniform(-0.1, 0.1)
         self.theta = np.random.uniform(-0.1*r, 0.1*r)
         self.theta_dot = np.random.uniform(-0.1, 0.1)
-        self.time = 0
         self.done = False
-        self.fallen = 0
-        self.upright_steps = 0
         self.state = np.array([self.x_dot, np.sin(self.theta), np.cos(self.theta), self.theta_dot], dtype=np.float32)
         return self.state   
 
@@ -132,11 +125,7 @@ class cartpole_env:
         for event in pygame.event.get():   # <-- THIS prevents freezing
                 if event.type == pygame.QUIT:
                     pygame.quit()
-                    exit()
-
-        #screen.fill("purple")
-        
-        
+                    exit()        
         
         # Coordinate conversions
         PIXELS_PER_METER = 200
@@ -155,9 +144,6 @@ class cartpole_env:
         cart_rect = pygame.Rect(cart_x_screen - cart_width//2, CART_Y, cart_width, cart_height)
         pygame.draw.rect(screen, (255, 0, 0), cart_rect)
 
-        
-
-
         # --- Draw manual/agent indicator ---
         label = "Manual" if manual_play else "Agent"
         text = self.font.render(label, True, (255, 255, 255))
@@ -170,7 +156,7 @@ class cartpole_env:
         pole_x = pivot[0] + pole_length_px * math.sin(self.theta)
         pole_y = pivot[1] - pole_length_px * math.cos(self.theta)
 
-        pygame.draw.line(screen, (0, 0, 0), pivot, (pole_x, pole_y), 6)
+        pygame.draw.line(screen, (0, 0, 255), pivot, (pole_x, pole_y), 6)
         pygame.draw.circle(screen, (0, 0, 255), (int(pole_x), int(pole_y)), 10)
 
         pygame.display.flip()
